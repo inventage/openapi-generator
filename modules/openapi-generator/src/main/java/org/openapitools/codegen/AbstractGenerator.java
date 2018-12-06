@@ -17,6 +17,8 @@
 
 package org.openapitools.codegen;
 
+import static org.openapitools.codegen.template.MultiTemplateEngine.multiTemplateLocator;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
@@ -28,32 +30,56 @@ import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.Scanner;
-import java.util.regex.Pattern;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.io.IOUtils;
+import org.openapitools.codegen.template.ExactCopyTemplateEngine;
+import org.openapitools.codegen.template.TemplateEngine;
+import org.openapitools.codegen.template.TemplateLocator;
+import org.openapitools.codegen.template.TemplatePath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class AbstractGenerator {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractGenerator.class);
 
-    @SuppressWarnings("static-method")
+    private TemplateLocator templateLocator = multiTemplateLocator();
+
+    /**
+     * Writes a {@code String} to a file, creating any parent directories if necessary.
+     *
+     * @param filename the file path
+     * @param contents the content
+     * @return the new {@link File}
+     * @throws IOException when unable to create directories
+     */
     public File writeToFile(String filename, String contents) throws IOException {
         LOGGER.info("writing file " + filename);
-        File output = new File(filename);
+        final File outputFile = new File(filename);
 
-        if (output.getParent() != null && !new File(output.getParent()).exists()) {
-            File parent = new File(output.getParent());
-            parent.mkdirs();
+        if (outputFile.getParent() != null) {
+            final File outputDirectory = new File(outputFile.getParent());
+
+            if (!outputDirectory.exists() && !outputDirectory.mkdirs()) {
+                throw new IOException("Creating directory failed: " + outputDirectory);
+            }
         }
-        Writer out = new BufferedWriter(new OutputStreamWriter(
-                new FileOutputStream(output), "UTF-8"));
 
-        out.write(contents);
-        out.close();
-        return output;
+        try (Writer fileWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFile), "UTF-8"))) {
+            fileWriter.write(contents);
+        }
+
+        return outputFile;
     }
 
+    /**
+     * Read template file from classpath or filesystem.
+     *
+     * @param name template name
+     * @return entire content of the template
+     * @throws RuntimeException when any error occurs
+     *
+     * @deprecated Use {@link TemplateEngine} instead.
+     */
     public String readTemplate(String name) {
         try {
             Reader reader = getTemplateReader(name);
@@ -92,61 +118,59 @@ public abstract class AbstractGenerator {
      * @param config Codegen config
      * @param templateFile Template file
      * @return String Full template file path
+     *
+     * @deprecated Use {@link TemplateLocator} instead.
      */
     public String getFullTemplateFile(CodegenConfig config, String templateFile) {
-        //1st the code will check if there's a <template folder>/libraries/<library> folder containing the file
-        //2nd it will check for the file in the specified <template folder> folder
-        //3rd it will check if there's an <embedded template>/libraries/<library> folder containing the file
-        //4th and last it will assume the file is in <embedded template> folder.
+        TemplatePath templatePath = templateLocator.findTemplateFile(config, templateFile);
 
-        //check the supplied template library folder for the file
-        final String library = config.getLibrary();
-        if (StringUtils.isNotEmpty(library)) {
-            //look for the file in the library subfolder of the supplied template
-            final String libTemplateFile = buildLibraryFilePath(config.templateDir(), library, templateFile);
-            if (new File(libTemplateFile).exists()) {
-                return libTemplateFile;
-            }
+        if (templatePath == null) {
+            return null;
+        } else {
+            return templatePath.getPath();
         }
-
-        //check the supplied template main folder for the file
-        final String template = config.templateDir() + File.separator + templateFile;
-        if (new File(template).exists()) {
-            return template;
-        }
-
-        //try the embedded template library folder next
-        if (StringUtils.isNotEmpty(library)) {
-            final String embeddedLibTemplateFile = buildLibraryFilePath(config.embeddedTemplateDir(), library, templateFile);
-            if (embeddedTemplateExists(embeddedLibTemplateFile)) {
-                // Fall back to the template file embedded/packaged in the JAR file library folder...
-                return embeddedLibTemplateFile;
-            }
-        }
-            
-        // Fall back to the template file embedded/packaged in the JAR file...
-        return config.embeddedTemplateDir() + File.separator + templateFile;
     }
 
+    /**
+     * Read file from classpath or filesystem.
+     *
+     * @param resourceFilePath file path to resource
+     * @return entire content of the file, or {@code null} if an error occurred.
+     *
+     * @deprecated Use {@link ExactCopyTemplateEngine} instead.
+     */
+    @Deprecated
     public String readResourceContents(String resourceFilePath) {
-        StringBuilder sb = new StringBuilder();
-        Scanner scanner = new Scanner(this.getClass().getResourceAsStream(getCPResourcePath(resourceFilePath)), "UTF-8");
-        while (scanner.hasNextLine()) {
-            String line = scanner.nextLine();
-            sb.append(line).append('\n');
+        try (InputStream inputStream = getClass().getResourceAsStream(getCPResourcePath(resourceFilePath))) {
+            return IOUtils.toString(inputStream, "utf-8");
+        } catch (IOException e) {
+            return null;
         }
-        return sb.toString();
     }
 
+    /**
+     * Checks if a template exists on the classpath
+     *
+     * @param name template name
+     * @return {@code true} if the template exists, {@code false} otherwise
+     *
+     * @deprecated Use {@link TemplateLocator} instead.
+     */
+    @Deprecated
     public boolean embeddedTemplateExists(String name) {
         return this.getClass().getClassLoader().getResource(getCPResourcePath(name)) != null;
     }
 
-    @SuppressWarnings("static-method")
-    public String getCPResourcePath(String name) {
-        if (!"/".equals(File.separator)) {
-            return name.replaceAll(Pattern.quote(File.separator), "/");
-        }
-        return name;
+    /**
+     * Converts native file path to Java resource path.
+     *
+     * @param path template path
+     * @return resource path
+     *
+     * @deprecated Use {@link TemplateLocator} instead.
+     */
+    @Deprecated
+    public String getCPResourcePath(String path) {
+        return templateLocator.getCPResourcePath(path);
     }
 }
