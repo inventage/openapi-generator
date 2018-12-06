@@ -1,0 +1,34 @@
+public enum {{#datatypeWithEnum}}{{{.}}}{{/datatypeWithEnum}}{{^datatypeWithEnum}}{{{classname}}}{{/datatypeWithEnum}} {
+
+    //---- Enum values
+
+    {{#with allowableValues}}
+        {{#each enumVars}}
+    {{{name}}}({{{value}}}){{#if @last}};{{else}},{{/if}}
+        {{/each}}
+    {{/with}}
+
+
+    //---- Fields
+
+    private {{{dataType}}} value;
+
+
+    //---- Constructor
+
+    {{#if datatypeWithEnum}}{{{datatypeWithEnum}}}{{else}}{{{classname}}}{{/if}}({{{dataType}}} value) {
+        this.value = value;
+    }
+
+
+    //---- Methods
+
+    @Override
+{{#jackson}}
+    @JsonValue
+{{/jackson}}
+    public String toString() {
+        return String.valueOf(value);
+    }
+
+}

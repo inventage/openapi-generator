@@ -1,0 +1,125 @@
+package {{package}};
+
+{{# if matrixParameters}}
+import static {{apiPackage}}.MatrixParameterUtils.matrixParameter;
+import static {{apiPackage}}.MatrixParameterUtils.matrixBaseParameter;
+{{/if}}
+
+{{#each imports}}import {{import}};
+{{/each}}
+
+import java.util.List;
+{{#with operations}}
+{{#each operation}}
+
+import javax.annotation.Generated;
+{{#if jaxrs}}
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.Path;
+    {{#if hasPathParams}}
+import javax.ws.rs.PathParam;
+    {{/if}}
+    {{#if hasQueryParams}}
+import javax.ws.rs.QueryParam;
+    {{/if}}
+    {{#if hasHeaderParams}}
+import javax.ws.rs.HeaderParam;
+    {{/if}}
+import javax.ws.rs.core.Response;
+import javax.ws.rs.Produces;
+{{/if}}
+{{#if spring}}
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.stereotype.Controller;
+    {{#if useBeanValidation}}
+import org.springframework.validation.annotation.Validated;
+    {{/if}}
+{{/if}}
+{{>adapterImports}}
+
+/**
+ * Resource adapter for the {{operationId}} operation.
+ *
+ * {{#if summary}}<p>{{summary}}</p>
+ *
+ * {{/if}}{{#if notes}}{{#if sumnary}}<p>{{/if}}{{notes}}{{#if sumnary}}</p>{{/if}}
+ *
+ * {{/if}}<p>Path: {{path}}</p>
+ */
+{{#if jaxrs}}
+@ApplicationScoped
+@Path("{{path}}")
+{{#if hasConsumes}}@Consumes({ {{#consumes}}"{{mediaType}}"{{#hasMore}}, {{/hasMore}}{{/consumes}} }){{/if}}
+{{#if hasProduces}}@Produces({ {{#produces}}"{{mediaType}}"{{#hasMore}}, {{/hasMore}}{{/produces}} }){{/if}}
+{{/if}}
+{{#if spring}}
+@Controller
+@RequestMapping(value = "{{#if contextPath}}{{contextPath}}{{/if}}")
+{{/if}}
+{{>adapterAnnotations}}@Generated("swagger-codegen")
+public class {{classname}}Adapter {
+
+    //---- Fields
+
+{{#if jaxrs}}
+    @Inject
+{{/if}}
+{{#if spring}}
+    @Autowired
+{{/if}}
+    private {{classname}} implementation;
+
+
+    //---- Methods
+
+    /**
+     * {{#if summary}}{{summary}}
+     *
+     * {{/if}}{{#if notes}}{{#if sumnary}}<p>{{/if}}{{notes}}{{#if sumnary}}</p>{{/if}}
+     *
+     * {{/if}}<p>Path: {{path}}</p>
+     *
+     {{> paramDoc adapter=true}}
+     */
+{{#if jaxrs}}
+    @{{httpMethod}}
+{{/if}}
+{{#if spring}}
+    @RequestMapping(value = "{{{path}}}",
+    {{~#if hasProduces}} produces = { {{#produces}}"{{{mediaType}}}"{{#hasMore}}, {{/hasMore}}{{/produces}} },{{/if}}
+    {{~#if hasConsumes}} consumes = { {{#consumes}}"{{{mediaType}}}"{{#hasMore}}, {{/hasMore}}{{/consumes}} },
+    {{~/if}} method = RequestMethod.{{httpMethod}}){{#equals "void" returnType}}{{else}}
+    @ResponseBody{{/equals}}
+{{/if}}
+    public Response {{operationId}}({{> params annotated=true types=true}}) {
+        {{#if jaxrs}}
+            {{#each pathParams}}
+                {{#with vendorExtensions.complexType}}
+                    final {{ref}} {{baseName}} = {{ref}}.builder()
+                    .{{baseProperty}}(matrixBaseParameter({{paramName}}PathSegment
+                    {{~#equals "String" basePropertyType}}{{else}}, {{basePropertyType}}.class{{/equals}}))
+                    {{#each properties}}
+                        .{{property}}(matrixParameter({{paramName}}PathSegment, "{{key}}"
+                        {{~#equals "String" type}}{{else}}, {{type}}.class{{/equals}}))
+                    {{/each}}
+                    .build();
+                {{/with}}
+            {{/each}}
+        {{/if}}
+        final {{{returnType}}} responseEntity = implementation.{{operationId}}({{> params}});
+        return Response.status({{statusCode}}).entity(responseEntity).build();
+    }
+
+}
+{{/each}}
+{{/with}}

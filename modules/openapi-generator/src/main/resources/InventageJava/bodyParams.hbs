@@ -1,0 +1,3 @@
+{{~#if isBodyParam~}}
+    {{#if types}}{{~#if annotated~}}@Valid @NotNull {{#if spring}}@RequestBody {{/if}}{{/if~}} {{{dataType}}} {{/if}}{{paramName}}
+{{~/if~}}

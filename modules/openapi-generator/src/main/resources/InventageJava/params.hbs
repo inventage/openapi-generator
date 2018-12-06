@@ -1,0 +1,32 @@
+{{#each pathParams ~}}
+{{>pathParams}}{{#unless @last}}, {{/unless}}
+{{~/each}}
+{{~#if hasPathParams ~}}
+    {{#if hasQueryParams ~}}, {{/if}}
+    {{~#unless hasQueryParams ~}}
+        {{#if hasHeaderParams}}{{#unless skipHeaderParams}}, {{/unless}}{{/if}}
+    {{~/unless~}}
+{{~/if}}
+{{~#each queryParams ~}}
+{{>queryParams}}{{#unless @last}}, {{/unless}}
+{{~/each}}
+{{~#if hasQueryParams ~}}
+    {{#if hasHeaderParams}}{{#unless skipHeaderParams}}, {{/unless}}{{/if}}
+{{~/if}}
+{{~#unless skipHeaderParams ~}}
+{{~#each headerParams ~}}
+{{>headerParams}}{{#unless @last}}, {{/unless}}
+{{~/each}}
+{{~/unless}}
+{{~#if hasBodyParam ~}}
+    {{#if hasQueryParams}}, {{/if ~}}
+    {{#unless hasQueryParams ~}}
+        {{#if hasPathParams}}, {{/if}}
+        {{~#unless hasPathParams ~}}
+            {{#if hasHeaderParams}}{{#unless skipHeaderParams}}, {{/unless}}{{/if}}
+        {{~/unless~}}
+    {{~/unless~}}
+    {{#with bodyParam}}
+{{>bodyParams}}
+    {{/with}}
+{{~/if~}}

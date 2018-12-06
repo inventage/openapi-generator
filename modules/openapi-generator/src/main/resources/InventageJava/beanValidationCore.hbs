@@ -1,0 +1,63 @@
+    {{! Pattern }}
+    {{#if pattern}}
+        {{#unless isByteArray}}
+    @Pattern(regexp = "{{pattern}}")
+        {{/unless}}
+    {{/if}}
+    {{! Size }}
+    {{#if minLength}}
+        {{#if maxLength}}
+    @Size(min = {{minLength}}, max = {{maxLength}})
+        {{/if}}
+        {{#unless maxLength}}
+    @Size(min = {{minLength}})
+        {{/unless}}
+    {{/if}}
+    {{#unless minLength}}
+        {{#if maxLength}}
+    @Size(max = {{maxLength}})
+        {{/if}}
+    {{/unless}}
+    {{! Items }}
+    {{#if minItems}}
+        {{#if maxItems}}
+    @Size(min = {{minItems}}, max = {{maxItems}})
+        {{/if}}
+        {{#unless maxItems}}
+    @Size(min = {{minItems}})
+        {{/unless}}
+    {{/if}}
+    {{#unless minItems}}
+        {{#if maxItems}}
+    @Size(max = {{maxItems}})
+        {{/if}}
+    {{/unless}}
+    {{! Integer value }}
+    {{#if isInteger}}
+        {{#if minimum}}
+    @Min({{minimum}})
+        {{/if}}
+        {{#if maximum}}
+    @Max({{maximum}})
+        {{/if}}
+    {{/if}}
+    {{! Long value }}
+    {{#if isLong}}
+        {{#if minimum}}
+    @Min({{minimum}})
+        {{/if}}
+        {{#if maximum}}
+    @Max({{maximum}})
+        {{/if}}
+    {{/if}}
+    {{! Decimal value }}
+    {{#unless isInteger}}
+        {{#unless isLong}}
+            {{#if minimum}}
+    @DecimalMin("{{minimum}}")
+            {{/if}}
+            {{#if maximum}}
+    @DecimalMax("{{maximum}}")
+            {{/if}}
+        {{/unless}}
+    {{/unless}}

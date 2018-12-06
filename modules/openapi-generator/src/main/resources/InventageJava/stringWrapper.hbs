@@ -1,0 +1,125 @@
+{{#discriminator}}{{>typeInfoAnnotation}}
+{{/discriminator}}public final class {{classname}} {{#serializableModel}}implements Serializable, Cloneable {{/serializableModel}}{
+
+    //---- Static
+    {{#serializableModel}}
+
+    private static final long serialVersionUID = 1L;
+    {{/serializableModel}}
+
+    /**
+     * Create a new {@link {{classname~}} } object, wrapping the supplied string value.
+     *
+     * @param value the value to wrap
+     * @return a {@link {{classname~}} } object wrapping the supplied {@code value}, or {@code null} if {@code value} is {@code null}
+     */
+    {{#if jackson}}
+    @JsonCreator
+    {{/if}}
+    public static {{classname}} fromValue(String value) {
+        if (value == null) {
+            return null;
+        }
+        else {
+            return new {{classname}}(value);
+        }
+    }
+
+    /**
+     * Create a new {@link {{classname~}} } object, wrapping the supplied string value.
+     *
+     * <p>This is an exact copy of {@link #fromValue(String)}, intended to be more readable when statically imported.</p>
+     *
+     * @param value the value to wrap
+     * @return a {@link {{classname~}} } object wrapping the supplied {@code value}, or {@code null} if {@code value} is {@code null}
+     */
+    public static {{classname}} {{classVarName}}(String value) {
+        return fromValue(value);
+    }
+
+
+    //---- Fields
+
+    private final String value;
+    private final int hashCode;
+
+
+    //---- Constructor
+
+    private {{classname}}(String value) {
+        if (value == null) {
+            throw new IllegalArgumentException("Enumeration value must not be null");
+        }
+
+        this.value = value;
+        this.hashCode = value.toUpperCase(Locale.ENGLISH).hashCode();
+    }
+
+
+    //---- Methods
+
+    /**
+     * Returns the hash code of the upper case representation of the wrapped {@link String}.
+     *
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return hashCode;
+    }
+
+    /**
+     * Uses {@link String#equalsIgnoreCase(String)} to compare wrapped values.
+     *
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object other) {
+        if (other == null) {
+            return false;
+        }
+        if (other == this) {
+            return true;
+        }
+        if (other.getClass() != getClass()) {
+            return false;
+        }
+        return (({{classname}}) other).value.equalsIgnoreCase(value);
+    }
+
+    /**
+     * Returns the wrapped string value.
+     *
+     * @return the wrapped string value
+     */
+    @Override
+    public String toString() {
+        return value;
+    }
+
+    /**
+     * Returns this instance.
+     *
+     * <p>Since {{classname}} objects are immutable, cloning is not necessary. However, this does not satisfy the following (soft)
+     * requirement: {@code s.clone() != s}.</p>
+     *
+     * @return this instance
+     */
+    @Override
+    public {{classname}} clone() {
+        return this;
+    }
+
+    //---- Properties
+
+    /**
+     * Returns the wrapped string value.
+     *
+     * @return the wrapped string value
+     */
+    {{#if jackson}}
+    @JsonValue
+    {{/if}}
+    public String getValue() { return value; }
+
+}

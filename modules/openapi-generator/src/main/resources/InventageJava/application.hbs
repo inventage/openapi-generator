@@ -1,0 +1,73 @@
+package {{apiPackage}};
+
+import static com.google.common.collect.Sets.union;
+
+import javax.annotation.Generated;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.ApplicationPath;
+import java.util.Set;
+
+import com.google.common.collect.ImmutableSet;
+
+{{#imports}}import {{import}};
+{{/imports}}
+
+/**
+ * {{appName}} base JAX-RS application.
+ *
+ * <p>To function correctly, the following resource interfaces
+ * need to be implemented:</p>
+ * <ul>
+{{#apiInfo}}
+    {{#apis}}
+ *   <li>{@link {{classname}} }</li>
+    {{/apis}}
+{{/apiInfo}}
+ * </ul>
+ *
+ * @author Simon Marti
+ */
+@Generated("swagger-codegen")
+public abstract class Abstract{{shortAppName}}Application extends Application {
+
+    //---- Static
+
+    public static final String APPLICATION_PATH = "{{#if contextPath}}{{contextPath}}{{else}}/{{/if}}";
+
+
+    //---- Methods
+
+    /**
+     * Get a set of additional resource, provider and {@link Feature feature} classes.
+     *
+     * The default life-cycle for resource class instances is per-request. The default
+     * life-cycle for providers (registered directly or via a feature) is singleton.
+     *
+     * @return a set of additional root resource and provider classes; must not be {@code null}
+     */
+    protected abstract Set<Class<?>> getAdditionalClasses();
+
+    /** {@inheritDoc} */
+    @Override
+    public Set<Class<?>> getClasses() {
+        return union(
+            ImmutableSet.of(
+                // Application resources
+        {{#apiInfo}}
+            {{#apis}}
+                {{classname}}Adapter.class{{#unless @last}},{{/unless}}
+            {{/apis}}
+        {{/apiInfo}}
+        {{#unless swaggerFileApplication}}
+
+                // Swagger file resource
+                configuration.addResource(SwaggerFileResource.class);
+        {{/unless}}
+            ),
+            getAdditionalClasses()
+        );
+    }
+
+}

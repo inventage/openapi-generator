@@ -1,0 +1,37 @@
+package {{package}};
+
+{{#imports}}import {{import}};
+{{/imports}}
+
+import javax.annotation.Generated;
+
+import java.util.List;
+
+{{#operations}}
+{{#operation}}
+/**
+ * Resource for the {{operationId}} operation.
+ *
+ * {{#if notes}}<p>{{notes}}</p>
+ *
+ * {{/if}}<p>Path: {{path}}</p>
+ *
+ * <p>There needs to be exactly one implementation of this interface on the classpath for {@link {{shortAppName}}Application} to function.</p>
+ */
+@Generated("swagger-codegen")
+public interface {{classname}} {
+
+    /**
+     * {{#if summary}}{{summary}}
+     *
+     * {{/if}}{{#if notes}}{{#if sumnary}}<p>{{/if}}{{notes}}{{#if sumnary}}</p>{{/if}}
+     *
+     * {{/if}}<p>Path: {{path}}</p>
+     *
+     {{> paramDoc}}
+     */
+    {{#returnType}}{{{returnType}}}{{/returnType}}{{^returnType}}void{{/returnType}} {{operationId}}({{> params types=true}});
+
+}
+{{/operation}}
+{{/operations}}

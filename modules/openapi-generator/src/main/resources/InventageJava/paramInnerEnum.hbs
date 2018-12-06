@@ -1,0 +1,26 @@
+    /**
+     * {{#if description}}{{{description}}}{{else}}{{{name}}}{{/if}}
+     */
+    public enum {{#if datatypeWithEnum}}{{{datatypeWithEnum}}}{{else}}{{classname}}{{/if}} {
+    {{#with allowableValues}}
+        {{#each enumVars}}
+        {{{name}}}({{{value}}}){{#unless @last}},{{/unless}}{{#if @last}};{{/if}}
+        {{/each}}
+    {{/with}}
+
+        private {{{dataType}}} value;
+
+        {{#if datatypeWithEnum}}{{{datatypeWithEnum}}}{{else}}{{classname}}{{/if}}({{{dataType}}} value) {
+            this.value = value;
+        }
+
+        @Override
+    {{#if jackson}}
+        @JsonValue
+    {{/if}}
+        public String toString() {
+            return String.valueOf(value);
+        }
+
+    }
+

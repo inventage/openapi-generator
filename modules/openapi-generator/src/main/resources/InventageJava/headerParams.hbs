@@ -1,0 +1,13 @@
+{{#if isHeaderParam ~}}
+    {{#if annotated ~}}
+        {{# if jaxrs ~}}
+        @HeaderParam("{{baseName}}")
+        {{~/if}}
+        {{~#if spring ~}}
+            @RequestHeader(value = "{{baseName}}"{{#required}}, required = true{{/required}}{{^required}}, required = false{{/required}}{{#defaultValue}}, defaultValue="{{{defaultValue}}}"{{/defaultValue}})
+        {{~/if}}
+        {{~#if useBeanValidation~}}
+{{>apiBeanValidationHeaderParams}}
+        {{~/if}} {{/if ~}}
+    {{#if types}}{{#if isEnum}} {{{datatypeWithEnum}}}{{else}} {{{dataType}}}{{/if}} {{/if}}{{paramName}}
+{{~/if~}}
