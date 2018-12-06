@@ -1,0 +1,42 @@
+    //---- Builder
+
+    /**
+     * Builder object capable of creating a {@link {{classname~}} } object through a fluid API.
+     */
+    public static final class Builder {
+
+    {{#allVars}}
+        private {{#if vendorExtensions.x-use-offset-date-time}}OffsetDateTime{{else}}{{{datatypeWithEnum}}}{{/if}} {{name}} = {{{defaultValue}}};
+    {{/allVars}}
+
+    {{#allVars}}
+        {{#if description}}
+        /**
+         * {{description}}
+         *
+         * @param {{name}} value to set
+         * @return builder for method chaining
+         */
+        {{/if}}
+        public Builder {{name}}({{#if vendorExtensions.x-use-offset-date-time}}OffsetDateTime{{else}}{{{datatypeWithEnum}}}{{/if}} {{name}}) {
+            this.{{name}} = {{name}};
+            return this;
+        }
+
+    {{/allVars}}
+        /**
+         * Build configured {@link {{classname~}} } object.
+         *
+         * @return configured {@link {{classname~}} } object
+         */
+        public {{classname}} build() {
+            final {{classname}} instance = new {{classname}}();
+
+    {{#allVars}}
+            instance.{{setter}}({{name}});
+    {{/allVars}}
+
+            return instance;
+        }
+
+    }

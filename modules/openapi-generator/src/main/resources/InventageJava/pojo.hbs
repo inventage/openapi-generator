@@ -1,0 +1,257 @@
+{{#if discriminator}}
+{{>typeInfoAnnotation}}
+{{/if}}
+@Generated("swagger-codegen")
+public class {{classname}} {{#if parent}}extends {{{parent}}} {{/if}}{{#if serializableModel}}implements Serializable, Cloneable {{/if}}{
+
+    //---- Static
+
+{{#if serializableModel}}
+    private static final long serialVersionUID = 1L;
+
+{{/if}}
+    {{#each vars}}
+    /** Property name of field '{{name}}'. */
+    public static final String {{vendorExtensions.constantName}} = "{{name}}";
+
+    {{/each}}
+    {{#unless children}}
+{{>builderMethod}}
+    {{/unless}}
+    {{#if vendorExtensions.simple}}
+
+    /**
+     * Returns a new {@link {{classname ~}} } instance with the given fields.
+     *
+    {{#each allVars}}
+     * @param {{name}} {{#if description}}{{description}}{{else}}the {{name}} to set{{/if}}
+    {{/each}}
+     * @return new {@link {{classname ~}} } instance with the given fields
+     */
+    public static {{classname}} {{classVarName}}({{#each allVars}}{{{datatypeWithEnum}}} {{name}}{{#unless @last}}, {{/unless}}{{/each}}) {
+        final {{classname}} instance = new {{classname}}();
+        {{#each allVars}}
+        instance.{{setter}}({{name}});
+        {{/each}}
+        return instance;
+    }
+    {{/if}}
+
+
+    //---- Fields
+
+{{#each vars}}
+    {{#if description}}
+    /** {{description}} */
+    {{/if}}
+    {{#if jackson}}
+    @JsonProperty("{{baseName}}")
+        {{#if isDate}}
+    @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd")
+        {{/if}}
+        {{#if isDateTime}}
+            {{#if vendorExtensions.noTimeZone}}
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+            {{/if}}
+            {{#unless vendorExtensions.noTimeZone}}
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")
+            {{/unless}}
+        {{/if}}
+    {{/if}}
+    {{#if useBeanValidation}}
+        {{#if required}}
+    @NotNull
+        {{/if}}
+{{>beanValidationCore}}
+    {{/if}}
+    {{#unless isPrimitiveType}}
+        {{#unless isDate}}
+            {{#unless isFloat}}
+                {{#unless isDateTime}}
+    @Valid
+                {{/unless}}
+            {{/unless}}
+        {{/unless}}
+    {{/unless}}
+    private {{{datatypeWithEnum}}} {{name}} = {{{defaultValue}}};
+
+{{/each}}
+
+    //---- Methods
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        else if (obj == this) {
+            return true;
+        }
+        else if (obj.getClass() != getClass()) {
+            return false;
+        }
+
+        {{#if hasVars}}
+        final {{classname}} other = ({{classname}}) obj;
+        {{/if}}
+        return new EqualsBuilder()
+            {{#if parent}}
+                .appendSuper(super.equals(obj))
+            {{/if}}
+            {{#each vars}}
+                .append({{name}}, other.{{name}})
+            {{/each}}
+                .isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder({{vendorExtensions.hashCodeInitial}}, {{vendorExtensions.hashCodeMultiplier}})
+            {{#if parent}}
+                .appendSuper(super.hashCode())
+            {{/if}}
+            {{#each vars}}
+                .append({{name}})
+            {{/each}}
+                .toHashCode();
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this)
+            {{#if parent}}
+                .appendSuper(super.toString())
+            {{/if}}
+            {{#each vars}}
+                .append("{{name}}", {{name}})
+            {{/each}}
+                .toString();
+    }
+
+
+    /**
+     * Returns a deep clone of this object.
+     *
+     * @return deep clone of this object
+     */
+    @Override
+    public {{classname}} clone() {
+        final {{classname}} copy;
+        try {
+            copy = ({{classname}}) super.clone();
+        }
+        catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+
+{{#each vars}}
+    {{#if isMapContainer}}
+        throw new IllegalStateException("Map cloning is not implemented.");
+    {{/if}}
+    {{#if isListContainer}}
+        if ({{name}} != null) {
+        {{#if items.vendorExtenions.clonable}}
+            copy.{{setter}}({{name}}.stream()
+                    .map(entry -> Optional.ofNullable(entry).map({{{items.datatypeWithEnum}}}::clone).orElse(null))
+                    .collect(Collectors.toList()));
+        {{/if}}
+        {{#unless items.vendorExtenions.clonable}}
+            copy.{{setter}}(new ArrayList<>({{name}}));
+        {{/unless}}
+        }
+    {{/if}}
+    {{#unless isListContainer}}
+        {{#if vendorExtenions.clonable}}
+            if ({{name}} != null) {
+                copy.{{setter}}({{name}}.clone());
+            }
+        {{/if}}
+    {{/unless}}
+{{/each}}
+
+        return copy;
+    }
+
+
+    //---- Properties
+
+{{#each vars}}
+    {{#if description}}
+    /**
+     * {{description}}
+     *
+     * @return {{description}}
+     */
+    {{/if}}
+    public {{{datatypeWithEnum}}} {{getter}}() { return {{name}}; }
+
+    {{#if description}}
+    /**
+     * {{description}}
+     *
+     * @param {{name}} value to set
+     */
+    {{/if}}
+    public void {{setter}}({{{datatypeWithEnum}}} {{name}}) { this.{{name}} = {{name}}; }
+    {{#if isListContainer}}
+
+    {{#if description}}
+    /**
+     * {{description}}
+     *
+     * @param {{name}}Item item to add
+     */
+    {{/if}}
+    public {{classname}} add{{nameInCamelCase}}Item({{{items.datatypeWithEnum}}} {{name}}Item) {
+        if (this.{{name}} == null) {
+            this.{{name}} = new ArrayList<>();
+        }
+        this.{{name}}.add({{name}}Item);
+        return this;
+    }
+    {{/if}}
+    {{#if isMapContainer}}
+
+    {{#if description}}
+    /**
+     * {{description}}
+     *
+     * @param key key with which the specified value is to be associated
+     * @param {{name}}Item value to be associated with the specified key
+     */
+    {{/if}}
+    public {{classname}} put{{nameInCamelCase}}Item(String key, {{{items.datatypeWithEnum}}} {{name}}Item) {
+        this.{{name}}.put(key, {{name}}Item);
+        return this;
+    }
+    {{/if}}
+
+{{/each}}
+
+{{#each vars}}
+    {{#if isEnum}}
+        {{#unless container}}
+    //---- Inner classes
+
+{{>modelInnerEnum}}
+
+
+        {{/unless}}
+    {{/if}}
+    {{#items.isEnum}}
+        {{#items}}
+            {{^isContainer}}
+    //---- Inner classes
+
+{{>modelInnerEnum}}
+
+
+            {{/isContainer}}
+        {{/items}}
+    {{/items.isEnum}}
+{{/each}}
+{{#unless children}}
+{{>builderClass}}
+{{/unless}}
+
+}

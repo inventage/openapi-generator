@@ -1,0 +1,100 @@
+package {{apiPackage}};
+
+import static org.apache.commons.lang3.Validate.notNull;
+
+import java.util.List;
+
+import javax.ws.rs.core.PathSegment;
+
+/**
+ * Collection of useful functions concerning matrix parameters.
+ *
+ * @author Simon Marti
+ */
+public final class MatrixParameterUtils {
+
+    //---- Static
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+    /**
+     * Creates a new matrix parameter of type T from the given {@code pathSegment}.
+     *
+     * @param pathSegment the path segment.
+     * @param type the class of the matrix parameter.
+     * @param <T> the type of the matrix parameter.
+     * @return the extracted matrix parameter.
+     */
+    public static <T> T matrixBaseParameter(PathSegment pathSegment, Class<T> type) {
+        return matrixParameter(pathSegment, null, type);
+    }
+
+    /**
+     * Creates a new matrix parameter of type string from the given {@code pathSegment}.
+     *
+     * @param pathSegment the path segment.
+     * @return the extracted matrix parameter.
+     */
+    public static String matrixBaseParameter(PathSegment pathSegment) {
+        return matrixParameter(pathSegment, null, String.class);
+    }
+
+    /**
+     * Creates a new string matrix parameter from the given key in the given path segment.
+     *
+     * @param pathSegment the path segment.
+     * @param key the key.
+     * @return the extracted matrix parameter.
+     */
+    public static String matrixParameter(PathSegment pathSegment, String key) {
+        return matrixParameter(pathSegment, key, String.class);
+    }
+
+    /**
+     * Creates a new matrix parameter of type T from the given key in the given path segment.
+     *
+     * @param pathSegment the path segment.
+     * @param key the key.
+     * @param type the class of T.
+     * @param <T> the type of the matrix parameter to be created.
+     * @return the extracted matrix parameter.
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> T matrixParameter(PathSegment pathSegment, String key, Class<T> type) {
+        notNull(pathSegment);
+
+        final String value;
+        if (key != null) {
+            final List<String> parameters = pathSegment.getMatrixParameters().get(key);
+
+            if (parameters == null || parameters.isEmpty()) {
+                return null;
+            }
+            else if (parameters.size() > 1) {
+                throw new IllegalArgumentException("Received multiple values for matrix parameter '" + key + "'.");
+            }
+            value = parameters.get(0);
+        }
+        else {
+            value = pathSegment.getPath();
+        }
+
+        final T object;
+        if (type == String.class) {
+            object = (T) value;
+        }
+        else {
+            object = OBJECT_MAPPER.convertValue(value, type);
+        }
+
+        return object;
+    }
+
+
+    // ---- Constructor
+
+    private MatrixParameterUtils() {
+        // nop
+    }
+
+}

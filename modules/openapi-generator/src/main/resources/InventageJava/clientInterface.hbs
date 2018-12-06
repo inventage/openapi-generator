@@ -1,0 +1,65 @@
+package {{package}};
+
+{{# if matrixParameters}}
+import static {{apiPackage}}.MatrixParameterUtils.matrixParameter;
+import static {{apiPackage}}.MatrixParameterUtils.matrixBaseParameter;
+{{/if}}
+
+{{#each imports}}import {{import}};
+{{/each}}
+
+import java.util.List;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.Produces;
+
+/**
+ * Client interface for the {{shortAppName}} service.
+ */
+@Path("{{contextPath}}")
+public interface {{shortAppName}}Client {
+
+{{#with operations}}
+{{#each operation}}
+    /**
+     * {{#if summary}}{{summary}}
+     *
+     * {{/if}}{{#if notes}}{{#if sumnary}}<p>{{/if}}{{notes}}{{#if sumnary}}</p>{{/if}}
+     *
+     * {{/if}}<p>Path: {{path}}</p>
+     *
+     {{> paramDoc adapter=true}}
+     */
+    @{{httpMethod}}
+    @Path("{{path}}")
+{{#if consumes}}
+    @Consumes({ {{#each consumes}}"{{mediaType}}"{{#unless @last}}, {{/unless}}{{/each}} })
+{{/if}}
+{{#if produces}}
+    @Produces({ {{#each produces}}"{{mediaType}}"{{#unless @last}}, {{/unless}}{{/each}} })
+{{/if}}
+    public {{#if returnType}}{{{returnType}}}{{else}}void{{/if}} {{operationId}}({{> params annotated=true types=true}});
+
+{{#each headerParams}}
+    {{# if isEnum}}
+{{>paramInnerEnum}}
+    {{/if}}
+{{/each}}
+{{#each pathParams}}
+    {{# if isEnum}}
+{{>paramInnerEnum}}
+    {{/if}}
+{{/each}}
+{{#each queryParams}}
+    {{# if isEnum}}
+{{>paramInnerEnum}}
+    {{/if}}
+{{/each}}
+{{/each}}
+
+{{/with}}
+}

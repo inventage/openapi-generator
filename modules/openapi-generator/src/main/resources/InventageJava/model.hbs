@@ -1,0 +1,25 @@
+package {{package}};
+
+{{#imports}}
+import {{import}};
+{{/imports}}
+
+import javax.annotation.Generated;
+
+{{#each models}}
+    {{#with model}}
+/**
+ * {{#description}}{{.}}{{/description}}{{^description}}{{classname}}{{/description}}
+ */
+        {{#if isEnum}}
+{{>enumOuterClass}}
+        {{/if}}
+        {{#unless isEnum}}
+            {{#equals "String" dataType}}
+{{>stringWrapper}}
+{{else ~}}
+{{>pojo}}
+            {{/equals}}
+        {{/unless}}
+    {{/with}}
+{{/each}}

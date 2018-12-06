@@ -1,0 +1,15 @@
+{{#*inline "param"}}
+* @param {{paramName}}{{#if adapter}}{{#if vendorExtensions.complexType}}PathSegment{{/if}}{{/if}} {{description }}
+{{/inline}}
+{{#each pathParams}}
+{{> param}}
+{{/each}}
+{{#each queryParams}}
+{{> param}}
+{{/each}}
+{{#each bodyParams}}
+{{> param}}
+{{/each}}
+{{~#equals "void" returnType~}}{{~else}}
+* @return response DTO
+{{/equals~}}

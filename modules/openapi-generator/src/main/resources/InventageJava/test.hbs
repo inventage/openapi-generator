@@ -1,0 +1,41 @@
+package {{apiPackage}};
+
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.assertThat;
+
+import java.util.Set;
+
+import javax.annotation.Generated;
+
+import org.junit.Test;
+import org.reflections.Reflections;
+
+/**
+ * Tests if all the required interfaces for the {@link PasApplication} are available.
+ *
+ * @author Simon Marti
+ */
+@Generated("swagger-codegen")
+public class {{shortAppName}}ApplicationImplementationsTest {
+
+    //---- Fields
+
+    private Reflections reflections = new Reflections("com.juliusbaer");
+
+
+    //---- Methods
+
+    private <T> void assertImplemented(Class<T> resource) {
+        final Set<Class<? extends T>> implementations = reflections.getSubTypesOf(resource);
+        assertThat("The resource interface " + resource.getSimpleName() + " is not implemented.", implementations, hasSize(greaterThanOrEqualTo(1)));
+    }
+
+    {{#each apiInfo.apis}}
+    @Test
+    public void {{classVarName}}_shouldBeImplemented() throws Exception {
+        assertImplemented({{classname}}.class);
+    }
+
+    {{/each}}
+}
