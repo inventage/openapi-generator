@@ -515,12 +515,6 @@ public class InventageJavaServerCodegen extends AbstractJavaJAXRSServerCodegen {
         return false;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public String toBooleanGetter(final String name) {
-        return super.toGetter(name);
-    }
-
     private enum NamingStrategy {
         AUTO,
         PATH;
