@@ -6,6 +6,7 @@ import static java.lang.String.format;
 import static java.util.Arrays.stream;
 import static org.openapitools.codegen.utils.GeneratorUtils.constantName;
 import static org.openapitools.codegen.utils.GeneratorUtils.groupOperationsByOperationId;
+import static org.openapitools.codegen.utils.ModelUtils.isArraySchema;
 import static org.openapitools.codegen.utils.StringUtils.camelize;
 
 import java.io.File;
@@ -26,6 +27,7 @@ import org.openapitools.codegen.CodegenProperty;
 import org.openapitools.codegen.CodegenType;
 import org.openapitools.codegen.SupportingFile;
 import org.openapitools.codegen.utils.GeneratorUtils;
+import org.openapitools.codegen.utils.ModelUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -450,6 +452,9 @@ public class InventageJavaServerCodegen extends AbstractJavaJAXRSServerCodegen {
 
     @Override
     public String toDefaultValue(Schema p) {
+        if (isArraySchema(p)) {
+            return "null";
+        }
         final String defaultValue = super.toDefaultValue(p);
         return defaultValue == null ? "null" : defaultValue;
     }
