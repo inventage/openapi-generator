@@ -102,6 +102,17 @@
         <finalName>${project.artifactId}-${project.version}</finalName>
         <plugins>
             <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>1.6.8</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <serverId>inventage-default</serverId>
+                    <nexusUrl>https://nexus.inventage.com</nexusUrl>
+                    <stagingProfileId>117a2089d07a03</stagingProfileId>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>net.revelc.code</groupId>
                 <artifactId>formatter-maven-plugin</artifactId>
                 <!-- Uncomment this to format before checkstyle -->
