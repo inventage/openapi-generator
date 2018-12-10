@@ -9,5 +9,5 @@
         {{~#if useBeanValidation~}}
 {{>apiBeanValidationHeaderParams}}
         {{~/if}} {{/if ~}}
-    {{#if types}}{{#if isEnum}} {{{datatypeWithEnum}}}{{else}} {{{dataType}}}{{/if}} {{/if}}{{paramName}}
+    {{#if types}}{{#if isEnum ~}} {{{datatypeWithEnum}}}{{else ~}} {{{dataType}}}{{/if}} {{/if}}{{paramName}}
 {{~/if~}}
