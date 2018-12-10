@@ -1,9 +1,5 @@
-@Field String BUILD_RECIPIENTS_EMAIL = 'tgmuender@inventage.com'
-@Field String MAVEN_VERSION = 'Maven 3.5.x Latest'
-@Field String NODE_IDENTIFIER = 'java8'
-
 try {
-    node(NODE_IDENTIFIER) {
+    node('java8') {
         stage ('Setup') {
             checkout([
                     $class: 'GitSCM',
@@ -40,14 +36,14 @@ finally {
     if (currentBuild.result != 'ABORTED') {
         node {
             step([$class: 'Mailer', notifyEveryUnstableBuild: true,
-                  recipients: BUILD_RECIPIENTS_EMAIL,
+                  recipients: 'tgmuender@inventage.com',
                   sendToIndividuals: false])
         }
     }
 }
 
 def prepareMaven() {
-    env.PATH = "${tool MAVEN_VERSION}/bin:${env.PATH}"
+    env.PATH = "${tool 'Maven 3.5.x Latest'}/bin:${env.PATH}"
 }
 
 def pomVersion(pom='pom.xml') {
