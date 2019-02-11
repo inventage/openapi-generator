@@ -10,7 +10,6 @@ import static org.openapitools.codegen.utils.ModelUtils.isArraySchema;
 import static org.openapitools.codegen.utils.StringUtils.camelize;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -27,7 +26,6 @@ import org.openapitools.codegen.CodegenProperty;
 import org.openapitools.codegen.CodegenType;
 import org.openapitools.codegen.SupportingFile;
 import org.openapitools.codegen.utils.GeneratorUtils;
-import org.openapitools.codegen.utils.ModelUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,30 +67,6 @@ public class InventageJavaServerCodegen extends AbstractJavaJAXRSServerCodegen {
 
     private static final String OPERATION_NAMING = "operationNaming";
     public static final String SERVICE_NAME = "serviceName";
-
-    /**
-     * Determine all of the types in the model definitions that are aliases of
-     * simple types.
-     *
-     * @param allDefinitions  the complete set of model definitions
-     * @return a mapping from model name to type alias
-     */
-    private static Map<String, String> getAllAliases(Map<String, Schema> allDefinitions) {
-        Map<String, String> aliases = new HashMap<>();
-        if (allDefinitions != null) {
-            for (Map.Entry<String, Schema> entry : allDefinitions.entrySet()) {
-                String swaggerName = entry.getKey();
-                Schema m = entry.getValue();
-                if (m.getType() != null &&
-                        !m.getType().equals("object") &&
-                        m.getEnum() == null &&
-                        PRIMITIVE_WRAPPING_VENDOR_EXTENSIONS.stream().noneMatch(key -> m.getExtensions().containsKey(key))) {
-                    aliases.put(swaggerName, m.getType());
-                }
-            }
-        }
-        return aliases;
-    }
 
 
     //---- Constructor
@@ -230,10 +204,6 @@ public class InventageJavaServerCodegen extends AbstractJavaJAXRSServerCodegen {
 
     @Override
     public CodegenModel fromModel(String name, Schema model, Map<String, Schema> allDefinitions) {
-        if (typeAliases == null) {
-            typeAliases = getAllAliases(allDefinitions);
-        }
-
         final CodegenModel codegenModel = super.fromModel(name, model, allDefinitions);
 
         codegenModel.imports.remove("ApiModelProperty");
