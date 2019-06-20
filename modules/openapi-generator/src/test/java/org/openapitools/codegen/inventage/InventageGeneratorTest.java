@@ -1,28 +1,22 @@
 package org.openapitools.codegen.inventage;
 
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertThat;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
-
-import org.openapitools.codegen.ClientOptInput;
-import org.openapitools.codegen.ClientOpts;
-import org.openapitools.codegen.DefaultCodegen;
-import org.openapitools.codegen.DefaultGenerator;
-import org.openapitools.codegen.languages.InventageJavaServerCodegen;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.annotations.Test;
-
 import io.swagger.parser.OpenAPIParser;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.parser.core.models.ParseOptions;
+import org.openapitools.codegen.ClientOptInput;
+import org.openapitools.codegen.ClientOpts;
+import org.openapitools.codegen.DefaultGenerator;
+import org.openapitools.codegen.languages.InventageJavaServerCodegen;
+import org.openapitools.codegen.templating.HandlebarsEngineAdapter;
+import org.testng.annotations.Ignore;
+import org.testng.annotations.Test;
+
+import java.io.IOException;
+import java.nio.file.DirectoryNotEmptyException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Comparator;
 
 /**
  * Tests for the {@link InventageJavaServerCodegen}. Options which are normally handed over by the maven-plugin-config in a pom file can be tested here.
@@ -31,42 +25,58 @@ import io.swagger.v3.parser.core.models.ParseOptions;
  */
 public class InventageGeneratorTest {
 
-    //---- Static
-
-    private static final Logger LOG = LoggerFactory.getLogger(InventageGeneratorTest.class);
-
-
     //---- Tests
 
     @Test
+    @Ignore
     public void generateWithDefaults_shouldGenerateFiles() {
-        final OpenAPI openAPI = new OpenAPIParser().readLocation("/3_0/petstore.yaml", null, new ParseOptions()).getOpenAPI();
+        final OpenAPI openAPI = new OpenAPIParser().readLocation("/3_0/inventageXEnumerations.yaml", null, new ParseOptions()).getOpenAPI();
 
         final ClientOptInput clientOptInput = new ClientOptInput();
         clientOptInput.setOpenAPI(openAPI);
 
-        final DefaultCodegen config = new InventageJavaServerCodegen();
+        final InventageJavaServerCodegen codegenConfig = new InventageJavaServerCodegen();
+        codegenConfig.setTemplatingEngine(new HandlebarsEngineAdapter());
+        codegenConfig.setSerializableModel(true);
+
 
         final String outputDir = getTempDir();
-        LOG.info("Using {} for generated files", outputDir);
-        config.setOutputDir(outputDir);
+        System.out.println(outputDir);
+        codegenConfig.setOutputDir(outputDir);
 
-        clientOptInput.setConfig(config);
+        clientOptInput.setConfig(codegenConfig);
         clientOptInput.setOpts(new ClientOpts());
 
-        final List<File> generatedFiles = new DefaultGenerator()
+        new DefaultGenerator()
                 .opts(clientOptInput)
                 .generate();
-
-        assertThat(generatedFiles, not(empty()));
     }
 
     private String getTempDir() {
+        final String testOutputDir = System.getenv("TEST_OUTPUT_DIR");
+
+        final Path outputPath = Paths.get(testOutputDir);
         try {
-            final Path tempDirectory = Files.createTempDirectory("openapi-generator-");
-            return tempDirectory.toString();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
+            Files.deleteIfExists(outputPath);
         }
+        catch (DirectoryNotEmptyException e) {
+            try {
+                Files.walk(outputPath)
+                        .sorted(Comparator.reverseOrder())
+                .map(path -> path.toFile())
+                .forEach(file -> file.delete());
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+        catch (IOException e) {
+            throw new RuntimeException("Could not delete output folder");
+        }
+        try {
+            Files.createDirectory(outputPath);
+        } catch (IOException e) {
+            throw new RuntimeException("Could not create output folder");
+        }
+        return testOutputDir;
     }
 }

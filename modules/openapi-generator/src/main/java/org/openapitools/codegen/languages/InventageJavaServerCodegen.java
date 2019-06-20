@@ -1,21 +1,10 @@
 package org.openapitools.codegen.languages;
 
-import static java.lang.Character.isUpperCase;
-import static java.lang.Math.abs;
-import static java.lang.String.format;
-import static java.util.Arrays.stream;
-import static org.openapitools.codegen.utils.GeneratorUtils.constantName;
-import static org.openapitools.codegen.utils.GeneratorUtils.groupOperationsByOperationId;
-import static org.openapitools.codegen.utils.ModelUtils.isArraySchema;
-import static org.openapitools.codegen.utils.StringUtils.camelize;
-
-import java.io.File;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import io.swagger.util.Json;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.media.Schema;
 import org.apache.commons.lang3.StringUtils;
 import org.openapitools.codegen.CliOption;
 import org.openapitools.codegen.CodegenConstants;
@@ -26,21 +15,32 @@ import org.openapitools.codegen.CodegenProperty;
 import org.openapitools.codegen.CodegenType;
 import org.openapitools.codegen.SupportingFile;
 import org.openapitools.codegen.utils.GeneratorUtils;
+import org.openapitools.codegen.utils.ModelUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import java.io.File;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
-import io.swagger.util.Json;
-import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.media.Schema;
+import static java.lang.Character.isUpperCase;
+import static java.lang.Math.abs;
+import static java.lang.String.format;
+import static java.util.Arrays.stream;
+import static org.openapitools.codegen.utils.GeneratorUtils.constantName;
+import static org.openapitools.codegen.utils.GeneratorUtils.groupOperationsByOperationId;
+import static org.openapitools.codegen.utils.ModelUtils.isArraySchema;
+import static org.openapitools.codegen.utils.StringUtils.camelize;
 
 
 /**
  * Generates a JAX-RS or Spring server stub.
  *
  * @author Simon Marti
+ * @author Tobias Gmünder
  */
 @SuppressWarnings("Duplicates")
 public class InventageJavaServerCodegen extends AbstractJavaJAXRSServerCodegen {
@@ -181,8 +181,51 @@ public class InventageJavaServerCodegen extends AbstractJavaJAXRSServerCodegen {
         importMapping.put("DELETE", "javax.ws.rs.DELETE");
         importMapping.put("Map", "java.util.Map");
         importMapping.remove("com.fasterxml.jackson.annotation.JsonProperty");
+
+        // XML
+        importMapping.put("XmlRootElement", "javax.xml.bind.annotation.XmlRootElement");
+        importMapping.put("XmlAccessorType", "javax.xml.bind.annotation.XmlAccessorType");
+        importMapping.put("XmlAccessType", "javax.xml.bind.annotation.XmlAccessType");
+        importMapping.put("JacksonXmlProperty", "com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty");
+        importMapping.put("XmlElement", "javax.xml.bind.annotation.XmlElement");
+        importMapping.put("XmlEnum", "javax.xml.bind.annotation.XmlEnum");
+        importMapping.put("XmlEnumValue", "javax.xml.bind.annotation.XmlEnumValue");
+        importMapping.put("XmlJavaTypeAdapter", "javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter");
+        importMapping.put("XmlAttribute", "javax.xml.bind.annotation.XmlAttribute");
+        importMapping.put("OffsetDateTimeXmlAdapter", "com.migesok.jaxb.adapter.javatime.OffsetDateTimeXmlAdapter");
+        importMapping.put("JacksonXmlElementWrapper", "com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper");
+        importMapping.put("XmlElementWrapper", "javax.xml.bind.annotation.XmlElementWrapper");
     }
 
+    @Override
+    public CodegenProperty fromProperty(String name, Schema p) {
+        final CodegenProperty codegenProperty = super.fromProperty(name, p);
+
+        if (isXEnumeration(p)) {
+            codegenProperty.openApiType = getXEnumerationType(p);
+            codegenProperty.dataType = getXEnumerationType(p);
+            codegenProperty.datatypeWithEnum = getXEnumerationType(p);
+            codegenProperty.baseType = getXEnumerationType(p);
+
+            if (ModelUtils.isStringSchema(p)) {
+                codegenProperty.isString = false;
+                codegenProperty.minimum = null;
+                codegenProperty.minLength = null;
+                codegenProperty.maximum = null;
+                codegenProperty.maxLength = null;
+            }
+        }
+        return codegenProperty;
+    }
+
+    @Override
+    protected void setNonArrayMapProperty(CodegenProperty property, String type) {
+        super.setNonArrayMapProperty(property, type);
+
+        if (isXEnumeration(property)) {
+            property.isPrimitiveType = false;
+        }
+    }
 
     @Override
     public void preprocessOpenAPI(OpenAPI openAPI) {
@@ -203,8 +246,12 @@ public class InventageJavaServerCodegen extends AbstractJavaJAXRSServerCodegen {
     }
 
     @Override
-    public CodegenModel fromModel(String name, Schema model, Map<String, Schema> allDefinitions) {
-        final CodegenModel codegenModel = super.fromModel(name, model, allDefinitions);
+    public CodegenModel fromModel(String name, Schema model) {
+        final CodegenModel codegenModel = super.fromModel(name, model);
+
+        if (isXEnumeration(model)) {
+            model.getExtensions().put("x-enumeration-type", name);
+        }
 
         codegenModel.imports.remove("ApiModelProperty");
         codegenModel.imports.remove("ApiModel");
@@ -273,6 +320,18 @@ public class InventageJavaServerCodegen extends AbstractJavaJAXRSServerCodegen {
                 updateCgP(cgp, codegenModel);
             }
         }
+
+        codegenModel.imports.add("XmlRootElement");
+        codegenModel.imports.add("XmlAccessorType");
+        codegenModel.imports.add("XmlAccessType");
+        codegenModel.imports.add("JacksonXmlProperty");
+        codegenModel.imports.add("XmlElement");
+        codegenModel.imports.add("XmlEnumValue");
+        codegenModel.imports.add("XmlJavaTypeAdapter");
+        codegenModel.imports.add("OffsetDateTimeXmlAdapter");
+        codegenModel.imports.add("XmlAttribute");
+        codegenModel.imports.add("JacksonXmlElementWrapper");
+        codegenModel.imports.add("XmlElementWrapper");
 
         return codegenModel;
     }
@@ -379,10 +438,9 @@ public class InventageJavaServerCodegen extends AbstractJavaJAXRSServerCodegen {
         return super.sanitizeName(preSanitizedName);
     }
 
-    /** {@inheritDoc} */
     @Override
-    public Map<String, Object> postProcessOperations(Map<String, Object> objs) {
-        final Map<String, Object> newObjs = super.postProcessOperations(objs);
+    public Map<String, Object> postProcessOperationsWithModels(Map<String, Object> objs, List<Object> allModels) {
+        final Map<String, Object> newObjs = super.postProcessOperationsWithModels(objs, allModels);
         Map<String, Object> operations = (Map<String, Object>) objs.get("operations");
 
         if (operations != null) {
@@ -404,6 +462,7 @@ public class InventageJavaServerCodegen extends AbstractJavaJAXRSServerCodegen {
         return newObjs;
     }
 
+
     /** {@inheritDoc} */
     @Override
     public String getterAndSetterCapitalize(String name) {
@@ -419,6 +478,8 @@ public class InventageJavaServerCodegen extends AbstractJavaJAXRSServerCodegen {
             return camelize(name);
         }
     }
+
+
 
     @Override
     public String toDefaultValue(Schema p) {
@@ -436,7 +497,8 @@ public class InventageJavaServerCodegen extends AbstractJavaJAXRSServerCodegen {
         if (apiName.endsWith("Api")) {
             return apiName.substring(0, apiName.lastIndexOf("Api"));
         }
-        return initialCaps(name);
+        return apiName;
+        //return initialCaps(name);
     }
 
     private void importsForParamValidation(List<CodegenParameter> params, List<LinkedHashMap> imports) {
@@ -489,6 +551,29 @@ public class InventageJavaServerCodegen extends AbstractJavaJAXRSServerCodegen {
         }
         return false;
     }
+
+    private boolean isXEnumeration(CodegenProperty codegenProperty) {
+        if (codegenProperty == null) {
+            return false;
+        }
+        return codegenProperty.getVendorExtensions() != null && codegenProperty.getVendorExtensions().containsKey("x-enumeration");
+
+    }
+
+    private boolean isXEnumeration(Schema schema) {
+        if (schema == null) {
+            return false;
+        }
+        return schema.getExtensions() != null && schema.getExtensions().containsKey("x-enumeration");
+    }
+
+    private String getXEnumerationType(Schema schema) {
+        if (schema == null || schema.getExtensions() == null) {
+            return null;
+        }
+        return (String) schema.getExtensions().get("x-enumeration-type");
+    }
+
 
     private enum NamingStrategy {
         AUTO,

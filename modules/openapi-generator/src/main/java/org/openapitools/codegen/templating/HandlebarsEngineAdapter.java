@@ -18,11 +18,14 @@ package org.openapitools.codegen.templating;
 
 import com.github.jknack.handlebars.Context;
 import com.github.jknack.handlebars.Handlebars;
+import com.github.jknack.handlebars.Helper;
 import com.github.jknack.handlebars.Jackson2Helper;
+import com.github.jknack.handlebars.Options;
 import com.github.jknack.handlebars.Template;
 import com.github.jknack.handlebars.context.FieldValueResolver;
 import com.github.jknack.handlebars.context.JavaBeanValueResolver;
 import com.github.jknack.handlebars.context.MapValueResolver;
+import com.github.jknack.handlebars.context.MethodValueResolver;
 import com.github.jknack.handlebars.helper.ConditionalHelpers;
 import com.github.jknack.handlebars.helper.StringHelpers;
 import com.github.jknack.handlebars.io.AbstractTemplateLoader;
@@ -38,6 +41,9 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Map;
+
+import static com.google.common.base.Objects.equal;
+
 
 public class HandlebarsEngineAdapter extends AbstractTemplatingEngineAdapter {
      final Logger LOGGER = LoggerFactory.getLogger(HandlebarsEngineAdapter.class);
@@ -70,8 +76,9 @@ public class HandlebarsEngineAdapter extends AbstractTemplatingEngineAdapter {
                 .newBuilder(bundle)
                 .resolver(
                         MapValueResolver.INSTANCE,
-                        JavaBeanValueResolver.INSTANCE,
-                        FieldValueResolver.INSTANCE)
+                        FieldValueResolver.INSTANCE,
+                        MethodValueResolver.INSTANCE,
+                        JavaBeanValueResolver.INSTANCE)
                 .build();
 
         Handlebars handlebars = new Handlebars(loader);
@@ -80,10 +87,18 @@ public class HandlebarsEngineAdapter extends AbstractTemplatingEngineAdapter {
             return "";
         });
         handlebars.registerHelper("json", Jackson2Helper.INSTANCE);
+        handlebars.registerHelper("equals", new Helper<Object>() {
+            @Override
+            public Object apply(Object context, Options options) throws IOException {
+                final Object obj = options.param(0);
+                return equal(context, obj) ? options.fn() : options.inverse();
+            }
+        });
         StringHelpers.register(handlebars);
         handlebars.registerHelpers(ConditionalHelpers.class);
         handlebars.registerHelpers(org.openapitools.codegen.templating.handlebars.StringHelpers.class);
         handlebars.setInfiniteLoops(infiniteLoops);
+        handlebars.prettyPrint(true);
         Template tmpl = handlebars.compile(templateFile);
         return tmpl.apply(context);
     }
