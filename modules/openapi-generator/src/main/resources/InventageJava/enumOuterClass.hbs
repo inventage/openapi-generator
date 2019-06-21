@@ -1,4 +1,4 @@
-public enum {{#datatypeWithEnum}}{{{.}}}{{/datatypeWithEnum}}{{^datatypeWithEnum}}{{{classname}}}{{/datatypeWithEnum}} {
+public enum {{#if datatypeWithEnum}}{{{datatypeWithEnum}}}{{else}}{{{classname}}}{{/if}} {
 
     //---- Enum values
 

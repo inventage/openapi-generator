@@ -9,7 +9,7 @@ import javax.annotation.Generated;
 {{#each models}}
     {{#with model}}
 /**
- * {{#description}}{{.}}{{/description}}{{^description}}{{classname}}{{/description}}
+ * {{#if description}}{{{description}}}{{else}}{{classname}}{{/if}}
  */
         {{#if isEnum}}
 {{>enumOuterClass}}

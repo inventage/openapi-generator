@@ -1,7 +1,6 @@
 package org.openapitools.codegen.languages;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import io.swagger.util.Json;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.media.Schema;
@@ -14,6 +13,7 @@ import org.openapitools.codegen.CodegenParameter;
 import org.openapitools.codegen.CodegenProperty;
 import org.openapitools.codegen.CodegenType;
 import org.openapitools.codegen.SupportingFile;
+import org.openapitools.codegen.templating.HandlebarsEngineAdapter;
 import org.openapitools.codegen.utils.GeneratorUtils;
 import org.openapitools.codegen.utils.ModelUtils;
 import org.slf4j.Logger;
@@ -24,7 +24,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
 import static java.lang.Character.isUpperCase;
 import static java.lang.Math.abs;
@@ -51,11 +50,17 @@ public class InventageJavaServerCodegen extends AbstractJavaJAXRSServerCodegen {
 
     protected static final String JAX_RS = "jax-rs";
     protected static final String SPRING = "spring";
-    protected static final Set<String> PRIMITIVE_WRAPPING_VENDOR_EXTENSIONS = ImmutableSet.of(
-            "x-ref",
-            "x-complexType",
-            "x-enumeration"
-    );
+
+    // Inventage Vendor Extensions (IVE)
+
+    /** Name of vendor extension to indicate an 'enum' with no compile time dependency to the whole value set is desired. */
+    private static final String IVE_XENUMERATION = "x-enumeration";
+
+    /** Name of the the vendor extension used to indicate the Java type of an 'x-enumeration'. Only used internally in the generator. */
+    private static final String IVE_XENUMERATION_TYPE = "x-enumeration-type";
+
+
+
     protected static final Map<String, String> ACCENT_REPLACEMENTS = ImmutableMap.<String, String>builder()
             .put("ä", "ae")
             .put("ö", "oe")
@@ -76,6 +81,9 @@ public class InventageJavaServerCodegen extends AbstractJavaJAXRSServerCodegen {
      */
     public InventageJavaServerCodegen() {
         super();
+
+        setTemplatingEngine(new HandlebarsEngineAdapter());
+
         outputFolder = "generated-code" + File.separator + "java";
         embeddedTemplateDir = templateDir = "InventageJava";
         invokerPackage = "com.inventage.example.client";
@@ -235,7 +243,7 @@ public class InventageJavaServerCodegen extends AbstractJavaJAXRSServerCodegen {
 
         final String apiFolder = sourceFolder + File.separator + apiPackage.replace('.', '/');
         if (JAX_RS.equals(getLibrary())) {
-            supportingFiles.add(new SupportingFile("application", apiFolder, format(Locale.ENGLISH,"Abstract%sApplication.java", shortAppName)));
+            supportingFiles.add(new SupportingFile("application.hbs", apiFolder, format(Locale.ENGLISH,"Abstract%sApplication.java", shortAppName)));
         }
 
         additionalProperties.put("swaggerFileApplication", true);
@@ -556,7 +564,7 @@ public class InventageJavaServerCodegen extends AbstractJavaJAXRSServerCodegen {
         if (codegenProperty == null) {
             return false;
         }
-        return codegenProperty.getVendorExtensions() != null && codegenProperty.getVendorExtensions().containsKey("x-enumeration");
+        return codegenProperty.getVendorExtensions() != null && codegenProperty.getVendorExtensions().containsKey(IVE_XENUMERATION);
 
     }
 
@@ -564,14 +572,14 @@ public class InventageJavaServerCodegen extends AbstractJavaJAXRSServerCodegen {
         if (schema == null) {
             return false;
         }
-        return schema.getExtensions() != null && schema.getExtensions().containsKey("x-enumeration");
+        return schema.getExtensions() != null && schema.getExtensions().containsKey(IVE_XENUMERATION);
     }
 
     private String getXEnumerationType(Schema schema) {
         if (schema == null || schema.getExtensions() == null) {
             return null;
         }
-        return (String) schema.getExtensions().get("x-enumeration-type");
+        return (String) schema.getExtensions().get(IVE_XENUMERATION_TYPE);
     }
 
 

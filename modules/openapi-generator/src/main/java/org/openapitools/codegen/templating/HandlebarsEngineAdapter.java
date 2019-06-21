@@ -46,7 +46,8 @@ import static com.google.common.base.Objects.equal;
 
 
 public class HandlebarsEngineAdapter extends AbstractTemplatingEngineAdapter {
-     final Logger LOGGER = LoggerFactory.getLogger(HandlebarsEngineAdapter.class);
+
+    final static Logger LOGGER = LoggerFactory.getLogger(HandlebarsEngineAdapter.class);
     private final String[] extensions = new String[]{"handlebars", "hbs"};
 
     // We use this as a simple lookup for valid file name extensions. This adapter will inspect .mustache (built-in) and infer the relevant handlebars filename

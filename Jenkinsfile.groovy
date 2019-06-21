@@ -18,7 +18,7 @@ try {
         }
 
         stage ('Build') {
-            invokeMaven("org.codehaus.mojo:versions-maven-plugin:2.2:set -DnewVersion=${env.VERSION} -DgenerateBackupPoms=false")
+            invokeMaven("org.codehaus.mojo:versions-maven-plugin:2.2:set -DnewVersion=${env.VERSION}-inventage -DgenerateBackupPoms=false")
             invokeMaven("clean deploy")
         }
     }
