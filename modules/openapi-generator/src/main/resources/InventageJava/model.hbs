@@ -13,13 +13,16 @@ import javax.annotation.Generated;
  */
         {{#if isEnum}}
 {{>enumOuterClass}}
-        {{/if}}
-        {{#unless isEnum}}
+        {{else}}
             {{#equals "String" dataType}}
+                {{#if vendorExtensions.x-wrapper}}
+{{>wrapper}}
+                {{else ~}}
 {{>stringWrapper}}
-{{else ~}}
+                {{/if}}
+            {{else ~}}
 {{>pojo}}
             {{/equals}}
-        {{/unless}}
+        {{/if}}
     {{/with}}
 {{/each}}

@@ -24,10 +24,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 import static java.lang.Character.isUpperCase;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
+import static java.lang.String.valueOf;
 import static java.util.Arrays.stream;
 import static org.openapitools.codegen.utils.GeneratorUtils.constantName;
 import static org.openapitools.codegen.utils.GeneratorUtils.groupOperationsByOperationId;
@@ -58,6 +60,9 @@ public class InventageJavaServerCodegen extends AbstractJavaJAXRSServerCodegen {
 
     /** Name of the the vendor extension used to indicate the Java type of an 'x-enumeration'. Only used internally in the generator. */
     private static final String IVE_XENUMERATION_TYPE = "x-enumeration-type";
+
+    /** The name of the vendor extension used to indicate there should be a Java type generated which wrappes a single property value. */
+    private static final String IVE_XWRAPPER = "x-wrapper";
 
 
 
@@ -209,6 +214,13 @@ public class InventageJavaServerCodegen extends AbstractJavaJAXRSServerCodegen {
     public CodegenProperty fromProperty(String name, Schema p) {
         final CodegenProperty codegenProperty = super.fromProperty(name, p);
 
+        if (ModelUtils.isArraySchema(p)) {
+            if (codegenProperty.items.getVendorExtensions() != null && codegenProperty.items.getVendorExtensions().containsKey(IVE_XWRAPPER)) {
+                codegenProperty.dataType = codegenProperty.baseType + "<" + codegenProperty.complexType + ">";
+                codegenProperty.datatypeWithEnum = codegenProperty.dataType;
+            }
+        }
+
         if (isXEnumeration(p)) {
             codegenProperty.openApiType = getXEnumerationType(p);
             codegenProperty.dataType = getXEnumerationType(p);
@@ -223,6 +235,14 @@ public class InventageJavaServerCodegen extends AbstractJavaJAXRSServerCodegen {
                 codegenProperty.maxLength = null;
             }
         }
+
+        getExtension(IVE_XWRAPPER, p).ifPresent(extensionValue -> {
+            codegenProperty.openApiType = getXEnumerationType(p);
+            codegenProperty.dataType = getXEnumerationType(p);
+            codegenProperty.datatypeWithEnum = getXEnumerationType(p);
+            codegenProperty.baseType = getXEnumerationType(p);
+        });
+
         return codegenProperty;
     }
 
@@ -233,6 +253,7 @@ public class InventageJavaServerCodegen extends AbstractJavaJAXRSServerCodegen {
         if (isXEnumeration(property)) {
             property.isPrimitiveType = false;
         }
+        getExtension(IVE_XWRAPPER, property).ifPresent(extensionValue -> property.isPrimitiveType = false);
     }
 
     @Override
@@ -253,17 +274,29 @@ public class InventageJavaServerCodegen extends AbstractJavaJAXRSServerCodegen {
         this.additionalProperties.put("fullSwagger", swaggerDef);
     }
 
+
     @Override
     public CodegenModel fromModel(String name, Schema model) {
         final CodegenModel codegenModel = super.fromModel(name, model);
 
         if (isXEnumeration(model)) {
-            model.getExtensions().put("x-enumeration-type", name);
+            model.getExtensions().put(IVE_XENUMERATION_TYPE, name);
         }
+        getExtension(IVE_XWRAPPER, model).ifPresent(extensionValue -> {
+            model.getExtensions().put(IVE_XENUMERATION_TYPE, name);
+
+            // Manually create and attache a string property and attach it to the model (otherwise the generated model has no 'vars' and hence no possibility to add constraints'
+            final CodegenProperty cp = new CodegenProperty();
+            cp.baseName = "value";
+            cp.maxLength = model.getMaxLength();
+            codegenModel.vars.add(cp);
+            postProcessModelProperty(codegenModel, cp);
+
+        });
 
         codegenModel.imports.remove("ApiModelProperty");
         codegenModel.imports.remove("ApiModel");
-        if (codegenModel.dataType != null && codegenModel.vendorExtensions.containsKey("x-enumeration")) {
+        if (codegenModel.dataType != null && (codegenModel.vendorExtensions.containsKey("x-enumeration") || codegenModel.vendorExtensions.containsKey(IVE_XWRAPPER))) {
             if (additionalProperties.containsKey("jackson")) {
                 codegenModel.imports.add("JsonCreator");
                 codegenModel.imports.add("JsonValue");
@@ -428,7 +461,6 @@ public class InventageJavaServerCodegen extends AbstractJavaJAXRSServerCodegen {
         if (operationNaming == NamingStrategy.PATH) {
             operation.setOperationId(null);
         }
-
         return super.getOrGenerateOperationId(operation, path, httpMethod);
     }
 
@@ -486,8 +518,6 @@ public class InventageJavaServerCodegen extends AbstractJavaJAXRSServerCodegen {
             return camelize(name);
         }
     }
-
-
 
     @Override
     public String toDefaultValue(Schema p) {
@@ -580,6 +610,20 @@ public class InventageJavaServerCodegen extends AbstractJavaJAXRSServerCodegen {
             return null;
         }
         return (String) schema.getExtensions().get(IVE_XENUMERATION_TYPE);
+    }
+
+    private Optional<Object> getExtension(String extensionName, Schema schema) {
+        if (schema == null || schema.getExtensions() == null) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(schema.getExtensions().get(extensionName));
+    }
+
+    private Optional<Object> getExtension(String extensionName, CodegenProperty codegenProperty) {
+        if (codegenProperty == null || codegenProperty.getVendorExtensions() == null) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(codegenProperty.getVendorExtensions().get(extensionName));
     }
 
 

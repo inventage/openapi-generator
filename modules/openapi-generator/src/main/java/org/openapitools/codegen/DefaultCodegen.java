@@ -547,11 +547,14 @@ public class DefaultCodegen implements CodegenConfig {
             for (Map<String, Object> mo : models) {
                 CodegenModel cm = (CodegenModel) mo.get("model");
                 for (CodegenProperty cp : cm.allVars) {
-                    // detect self import
-                    if (cp.dataType.equalsIgnoreCase(cm.classname) ||
-                            (cp.isContainer && cp.items != null && cp.items.dataType.equalsIgnoreCase(cm.classname))) {
-                        cm.imports.remove(cm.classname); // remove self import
-                        cp.isSelfReference = true;
+
+                    if (cp.dataType != null) {
+                        // detect self import
+                        if (cp.dataType.equalsIgnoreCase(cm.classname) ||
+                                (cp.isContainer && cp.items != null && cp.items.dataType.equalsIgnoreCase(cm.classname))) {
+                            cm.imports.remove(cm.classname); // remove self import
+                            cp.isSelfReference = true;
+                        }
                     }
                 }
             }
