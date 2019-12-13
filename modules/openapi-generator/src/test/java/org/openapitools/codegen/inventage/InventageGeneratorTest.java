@@ -1,22 +1,22 @@
 package org.openapitools.codegen.inventage;
 
-import io.swagger.parser.OpenAPIParser;
-import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.parser.core.models.ParseOptions;
-import org.openapitools.codegen.ClientOptInput;
-import org.openapitools.codegen.ClientOpts;
-import org.openapitools.codegen.DefaultGenerator;
-import org.openapitools.codegen.languages.InventageJavaServerCodegen;
-import org.openapitools.codegen.templating.HandlebarsEngineAdapter;
-import org.testng.annotations.Ignore;
-import org.testng.annotations.Test;
-
 import java.io.IOException;
 import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
+
+import org.openapitools.codegen.ClientOptInput;
+import org.openapitools.codegen.DefaultGenerator;
+import org.openapitools.codegen.languages.InventageJavaServerCodegen;
+import org.openapitools.codegen.templating.HandlebarsEngineAdapter;
+import org.testng.annotations.Ignore;
+import org.testng.annotations.Test;
+
+import io.swagger.parser.OpenAPIParser;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.parser.core.models.ParseOptions;
 
 /**
  * Tests for the {@link InventageJavaServerCodegen}. Options which are normally handed over by the maven-plugin-config in a pom file can be tested here.
@@ -45,7 +45,6 @@ public class InventageGeneratorTest {
         codegenConfig.setOutputDir(outputDir);
 
         clientOptInput.setConfig(codegenConfig);
-        clientOptInput.setOpts(new ClientOpts());
 
         new DefaultGenerator()
                 .opts(clientOptInput)
