@@ -334,7 +334,7 @@ public class InventageJavaServerCodegen extends AbstractJavaJAXRSServerCodegen {
                 Map.Entry::getKey,
                 Map.Entry::getValue,
                 (u, v) -> {
-                    throw new IllegalStateException(format("Duplicate key %s", u));
+                    throw new IllegalStateException(format(ENGLISH, "Duplicate key %s", u));
                 },
                 LinkedHashMap::new)
             );
