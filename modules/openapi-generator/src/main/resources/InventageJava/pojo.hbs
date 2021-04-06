@@ -128,7 +128,6 @@ public class {{classname}} {{#if parent}}extends {{{parent}}} {{/if}}{{#if seria
                 .toString();
     }
 
-
     /**
      * Returns a deep clone of this object.
      *
@@ -145,28 +144,23 @@ public class {{classname}} {{#if parent}}extends {{{parent}}} {{/if}}{{#if seria
         }
 
 {{#each vars}}
-    {{#if isMapContainer}}
-        throw new IllegalStateException("Map cloning is not implemented.");
-    {{/if}}
-    {{#if isListContainer}}
+    {{#if isContainer}}
         if ({{name}} != null) {
-        {{#if items.vendorExtenions.clonable}}
+        {{#if items.vendorExtensions.clonable}}
             copy.{{setter}}({{name}}.stream()
                     .map(entry -> Optional.ofNullable(entry).map({{{items.datatypeWithEnum}}}::clone).orElse(null))
                     .collect(Collectors.toList()));
-        {{/if}}
-        {{#unless items.vendorExtenions.clonable}}
+        {{^}}
             copy.{{setter}}(new ArrayList<>({{name}}));
-        {{/unless}}
+        {{/if}}
         }
-    {{/if}}
-    {{#unless isListContainer}}
-        {{#if vendorExtenions.clonable}}
+    {{^}}
+        {{#if vendorExtensions.clonable}}
             if ({{name}} != null) {
                 copy.{{setter}}({{name}}.clone());
             }
         {{/if}}
-    {{/unless}}
+    {{/if}}
 {{/each}}
 
         return copy;
@@ -184,6 +178,7 @@ public class {{classname}} {{#if parent}}extends {{{parent}}} {{/if}}{{#if seria
      */
     {{/if}}
     public {{{datatypeWithEnum}}} {{getter}}() { return {{name}}; }
+{{#unless isReadOnly}}
 
     {{#if description}}
     /**
@@ -193,7 +188,7 @@ public class {{classname}} {{#if parent}}extends {{{parent}}} {{/if}}{{#if seria
      */
     {{/if}}
     public void {{setter}}({{{datatypeWithEnum}}} {{name}}) { this.{{name}} = {{name}}; }
-    {{#if isListContainer}}
+    {{#if isContainer}}
 
     {{#if description}}
     /**
@@ -210,21 +205,7 @@ public class {{classname}} {{#if parent}}extends {{{parent}}} {{/if}}{{#if seria
         return this;
     }
     {{/if}}
-    {{#if isMapContainer}}
-
-    {{#if description}}
-    /**
-     * {{description}}
-     *
-     * @param key key with which the specified value is to be associated
-     * @param {{name}}Item value to be associated with the specified key
-     */
-    {{/if}}
-    public {{classname}} put{{nameInCamelCase}}Item(String key, {{{items.datatypeWithEnum}}} {{name}}Item) {
-        this.{{name}}.put(key, {{name}}Item);
-        return this;
-    }
-    {{/if}}
+{{/unless}}
 
 {{/each}}
 

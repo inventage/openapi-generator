@@ -395,11 +395,10 @@ public class InventageJavaServerCodegen extends AbstractJavaJAXRSServerCodegen {
                 codegenModel.imports.add("JacksonXmlProperty");
                 codegenModel.imports.add("OffsetDateTimeXmlAdapter");
 
-                final long numberOfListContainerProperties = codegenModel.getVars().stream()
-                    .filter(codegenProperty -> codegenProperty.isListContainer)
-                    .count();
+                final boolean hasContainerProperties = codegenModel.getVars().stream()
+                    .anyMatch(codegenProperty -> codegenProperty.isContainer);
 
-                if (numberOfListContainerProperties != 0) {
+                if (hasContainerProperties) {
                     codegenModel.imports.add("XmlElementWrapper");
                     codegenModel.imports.add("JacksonXmlElementWrapper");
                 }
@@ -420,7 +419,7 @@ public class InventageJavaServerCodegen extends AbstractJavaJAXRSServerCodegen {
             for (final CodegenProperty var : codegenModel.vars) {
                 var.vendorExtensions.put("constantName", "PN_" + constantName(var.name));
                 var.vendorExtensions.put("cloneable", cloneable(var));
-                if (var.isListContainer) {
+                if (var.isContainer) {
                     var.items.vendorExtensions.put("cloneable", cloneable(var.items));
                 }
             }
